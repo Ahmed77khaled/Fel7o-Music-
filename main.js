@@ -210,8 +210,10 @@ async function buildArgs(job, settings) {
   if (settings.embedThumbnail) args.push('--embed-thumbnail');
   if (settings.embedMetadata) args.push('--add-metadata');
   
-  // Ignore errors for metadata/thumbnail to avoid failing the whole download
-  args.push('--ignore-errors');
+  // Ignore metadata/thumbnail embedding errors only — NOT download errors.
+  // (Each job is now a single video, so we want real failures to surface
+  // properly via a non-zero exit code, not be silently swallowed.)
+  args.push('--no-abort-on-error');
   
   args.push(job.url);
   return args;
@@ -376,7 +378,7 @@ ipcMain.handle('download:start', async (event, job) => {
     }
     const args = await buildArgs(job, settings);
     const proc = spawn(bin, args, { windowsHide: true });
-    activeJobs.set(job.id, { proc, paused: false, cancelled: false, bin, args, job, settings });
+    activeJobs.set(job.id, { proc, paused: false, cancelled: false, bin, args, job, settings, lastError: null });
 
     proc.stdout.on('data', (chunk) => {
       const lines = chunk.toString().split('\n');
@@ -391,7 +393,13 @@ ipcMain.handle('download:start', async (event, job) => {
       }
     });
     proc.stderr.on('data', (chunk) => {
-      mainWindow.webContents.send('download:log', { id: job.id, message: chunk.toString() });
+      const text = chunk.toString();
+      const jobState = activeJobs.get(job.id);
+      if (jobState) {
+        const errorLine = text.split('\n').find((l) => l.trim().startsWith('ERROR:'));
+        if (errorLine) jobState.lastError = errorLine.replace(/^ERROR:\s*/, '').trim();
+      }
+      mainWindow.webContents.send('download:log', { id: job.id, message: text });
     });
     proc.on('close', (code) => {
       const state = activeJobs.get(job.id);
@@ -402,7 +410,8 @@ ipcMain.handle('download:start', async (event, job) => {
       } else if (code === 0) {
         mainWindow.webContents.send('download:done', { id: job.id });
       } else {
-        mainWindow.webContents.send('download:error', { id: job.id, message: `yt-dlp exited with code ${code}` });
+        const reason = (state && state.lastError) || `yt-dlp exited with code ${code}`;
+        mainWindow.webContents.send('download:error', { id: job.id, message: reason });
       }
     });
   });
