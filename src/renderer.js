@@ -569,7 +569,10 @@ function retryJob(id) {
 function openFolder(id) {
   const job = state.jobs.get(id);
   if (!job || !state.settings) return;
-  window.fel7o.openFolder(state.settings.downloadFolder);
+  window.fel7o.openJobFolder({
+    downloadFolder: state.settings.downloadFolder,
+    playlistFolder: job.playlistFolder || null,
+  });
 }
 
 function cancelJob(id) {
@@ -1169,6 +1172,7 @@ function renderPlaylistContent() {
         audioQuality: state.selectedMode === 'mp3' ? el('qualitySelect').value : state.settings.audioQuality,
         videoQuality: state.selectedMode === 'video' ? el('qualitySelect').value : state.settings.videoQuality,
         videoContainer: state.settings.videoContainer,
+        playlistFolder: data.playlistTitle || null,
         status: 'queued',
         percent: 0,
         speed: '',
