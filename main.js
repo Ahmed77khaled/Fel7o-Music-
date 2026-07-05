@@ -200,7 +200,11 @@ async function buildArgs(job, settings) {
   if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
 
   const outTemplate = path.join(targetDir, '%(title)s.%(ext)s');
-  const args = ['--newline', '--no-mtime', '--no-playlist', '-o', outTemplate];
+  // --windows-filenames: guarantees titles with characters invalid on
+  // Windows (| : * ? " < > etc., common in music titles with "Artist |
+  // Song" style names) never break the output path, regardless of which OS
+  // yt-dlp thinks it's running on.
+  const args = ['--newline', '--no-mtime', '--no-playlist', '--windows-filenames', '-o', outTemplate];
 
   // Try to find ffmpeg to ensure post-processing works
   const ffmpegPath = await new Promise(resolve => {
