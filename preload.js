@@ -32,7 +32,6 @@ contextBridge.exposeInMainWorld('fel7o', {
   notify: (opts) => ipcRenderer.invoke('notify', opts),
   getVideoInfo: (url) => ipcRenderer.invoke('ytdlp:getInfo', url),
   getPlaylistInfo: (url) => ipcRenderer.invoke('ytdlp:getPlaylistInfo', url),
-  getVideoSizes: (urls) => ipcRenderer.invoke('ytdlp:getVideoSizes', urls),
   onProgress: (cb) => ipcRenderer.on('download:progress', (_e, data) => cb(data)),
   onDone: (cb) => ipcRenderer.on('download:done', (_e, data) => cb(data)),
   onError: (cb) => ipcRenderer.on('download:error', (_e, data) => cb(data)),
