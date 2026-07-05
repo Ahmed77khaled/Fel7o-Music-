@@ -1,0 +1,5 @@
+node_modules/
+*.part
+dist/
+build/
+.env

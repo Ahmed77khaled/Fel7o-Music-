@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<title>Fel7o Downloader</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-glow"></div>
+
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="logo-mark">F</div>
+        <div class="brand-text">
+          <div class="wordmark"><span class="w-fel">Fel7o</span><span class="w-down">Downloader</span></div>
+          <div class="version">v5.0.0 &middot; Premium</div>
+        </div>
+      </div>
+      <nav class="header-actions">
+        <span class="update-dot" id="updateDot" title="No updates available" hidden></span>
+        <button class="icon-btn" id="themeToggleBtn" title="Toggle theme">
+          <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg>
+        </button>
+        <button class="pill-btn pill-muted" id="aboutBtn">About</button>
+        <button class="pill-btn pill-violet" id="historyBtn">History</button>
+        <button class="pill-btn pill-outline" id="settingsBtn">Settings</button>
+      </nav>
+    </header>
+
+    <!-- URL section -->
+    <section class="url-card">
+      <label class="url-label">رابط يوتيوب — فيديو، قائمة تشغيل أو قناة</label>
+      <div class="url-row">
+        <div class="url-input-wrap" id="urlInputWrap">
+          <svg class="url-icon" viewBox="0 0 24 24"><path d="M10 15l5.19-3L10 9v6zm12-3c0 2.5-.3 4.2-.3 4.2s-.28 1.9-1.13 2.74c-1.09 1.1-2.31 1.1-2.87 1.17-4.01.29-10.03.29-10.03.29s-6.02 0-10.03-.29c-.56-.07-1.78-.07-2.87-1.17C2.9 21.4 2.6 19.5 2.6 19.5S2.3 17.8 2.3 15.3v-2.6c0-2.5.3-4.2.3-4.2S2.9 6.6 3.77 5.76c1.09-1.1 2.31-1.1 2.87-1.17C10.65 4.3 16 4.3 16 4.3h.02s5.35 0 9.36.29c.56.07 1.78.07 2.87 1.17.85.84 1.13 2.74 1.13 2.74S22 10.5 22 12z"/></svg>
+          <input type="text" id="urlInput" placeholder="الصق رابط يوتيوب هنا…" autocomplete="off" />
+        </div>
+        <button class="ghost-btn" id="pasteBtn" title="لصق">
+          <svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+          <span>لصق</span>
+        </button>
+        <button class="ghost-btn ghost-danger" id="clearBtn" title="مسح">
+          <svg viewBox="0 0 24 24"><path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          <span>مسح</span>
+        </button>
+        <button class="primary-btn" id="addBtn">
+          <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg>
+          <span>تحميل</span>
+        </button>
+      </div>
+      <div class="mode-row">
+        <span class="mode-row-label">عايز تحمل إيه؟</span>
+        <div class="mode-toggle" id="modeToggle">
+          <button class="mode-opt active" id="modeMp3Btn" data-mode="mp3" type="button">🎵 صوت (MP3)</button>
+          <button class="mode-opt" id="modeVideoBtn" data-mode="video" type="button">🎬 فيديو (MP4)</button>
+        </div>
+        <select id="qualitySelect" class="mini-select">
+          <option value="128">128 kbps</option>
+          <option value="192">192 kbps</option>
+          <option value="320" selected>320 kbps</option>
+        </select>
+      </div>
+
+      <!-- Hero Preview: shown as the user pastes a link, before it's queued -->
+      <div id="urlPreviewSection" hidden></div>
+    </section>
+
+    <!-- Active download hero -->
+    <section class="hero-card" id="heroCard">
+      <div class="hero-empty" id="heroEmpty">
+        <div class="hero-empty-icon">🎬</div>
+        <div class="hero-empty-title">لسه مفيش تحميل شغال</div>
+        <div class="hero-empty-sub">الصق رابط فوق واضغط تحميل عشان يبدأ</div>
+      </div>
+    </section>
+
+    <!-- Queue Statistics & Global Controls -->
+    <div class="manager-section" id="queueStats" hidden>
+      <div class="manager-header">
+        <div class="manager-title">إحصائيات التحميل</div>
+        <div class="manager-controls">
+          <button class="pill-btn pill-outline" id="pauseAllBtn">إيقاف الكل</button>
+          <button class="pill-btn pill-violet" id="resumeAllBtn">استئناف الكل</button>
+        </div>
+      </div>
+      
+      <div class="queue-stats-grid">
+        <div class="queue-stat-card">
+          <div class="queue-stat-value" id="queueStatDownloading">0</div>
+          <div class="queue-stat-label">جاري التحميل</div>
+        </div>
+        <div class="queue-stat-card">
+          <div class="queue-stat-value" id="queueStatWaiting">0</div>
+          <div class="queue-stat-label">في الانتظار</div>
+        </div>
+        <div class="queue-stat-card">
+          <div class="queue-stat-value" id="queueStatCompleted">0</div>
+          <div class="queue-stat-label">مكتمل</div>
+        </div>
+        <div class="queue-stat-card">
+          <div class="queue-stat-value" id="queueStatFailed">0</div>
+          <div class="queue-stat-label">فشل</div>
+        </div>
+        <div class="queue-stat-card">
+          <div class="queue-stat-value" id="queueStatSpeed">—</div>
+          <div class="queue-stat-label">السرعة الكلية</div>
+        </div>
+      </div>
+
+      <div class="overall-progress-container">
+        <div class="overall-progress-header">
+          <span class="overall-progress-label">التقدم الكلي للعمليات الجارية</span>
+          <span class="overall-progress-value" id="queueStatProgress">0%</span>
+        </div>
+        <div class="overall-progress-track">
+          <div class="overall-progress-fill" id="queueStatProgressBar" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Queue -->
+    <section class="queue-section">
+      <div class="section-head">
+        <h2>قائمة الانتظار</h2>
+        <span class="count-badge" id="queueCount">0 عناصر</span>
+      </div>
+      <div class="queue-list" id="queueList">
+        <div class="queue-empty">لسه مفيش تحميلات في الطابور</div>
+      </div>
+    </section>
+
+    <!-- Activity / status bar -->
+    <footer class="status-bar">
+      <span id="ffmpegStatus" class="status-chip">جاري التحقق من ffmpeg…</span>
+      <span id="ytdlpStatus" class="status-chip">جاري التحقق من yt-dlp…</span>
+    </footer>
+  </div>
+
+  <!-- Settings modal -->
+  <div class="modal-overlay" id="settingsOverlay" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <h3>الإعدادات</h3>
+        <button class="icon-btn" id="closeSettings">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-card">
+          <div class="settings-card-title">التحميل</div>
+          <div class="setting-row">
+            <span>مجلد الحفظ</span>
+            <div class="folder-picker">
+              <span id="folderPathLabel" class="folder-path">—</span>
+              <button class="ghost-btn" id="chooseFolderBtn">اختيار</button>
+            </div>
+          </div>
+          <div class="setting-row">
+            <span>عدد التحميلات المتزامنة</span>
+            <input type="number" id="concurrentInput" min="1" max="5" class="mini-input" />
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-title">الصوت</div>
+          <div class="setting-row">
+            <span>الجودة الافتراضية</span>
+            <select id="audioQualitySelect" class="mini-select">
+              <option value="128">128 kbps</option>
+              <option value="192">192 kbps</option>
+              <option value="320">320 kbps</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-title">الفيديو</div>
+          <div class="setting-row">
+            <span>الجودة الافتراضية</span>
+            <select id="videoQualitySelect" class="mini-select">
+              <option value="best">أفضل جودة</option>
+              <option value="2160">4K</option>
+              <option value="1440">1440p</option>
+              <option value="1080">1080p</option>
+              <option value="720">720p</option>
+              <option value="480">480p</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-title">عام</div>
+          <label class="switch-row">
+            <span>لصق الرابط تلقائيًا من الحافظة</span>
+            <span class="switch" id="autoPasteSwitch"><span class="switch-knob"></span></span>
+          </label>
+          <label class="switch-row">
+            <span>تضمين الصورة المصغرة</span>
+            <span class="switch" id="thumbSwitch"><span class="switch-knob"></span></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- About modal -->
+  <div class="modal-overlay" id="aboutOverlay" hidden>
+    <div class="modal welcome-modal">
+      <div class="modal-head">
+        <h3>About</h3>
+        <button class="icon-btn" id="closeAbout">✕</button>
+      </div>
+      <div class="modal-body" style="align-items:center; text-align:center;">
+        <div class="welcome-logo">F</div>
+        <div class="welcome-title">Fel7o <span class="w-accent">Downloader</span></div>
+        <div class="welcome-message">الإصدار v5.0.0 · مبني بواسطة Ahmed Khaled Elfalah<br />تحميل فيديوهات وأغاني يوتيوب بسهولة وبجودة عالية.</div>
+        <div class="welcome-links" id="aboutLinks"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History modal -->
+  <div class="modal-overlay" id="historyOverlay" hidden>
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h3>السجل</h3>
+        <div class="modal-head-actions">
+          <input type="text" id="historySearch" placeholder="بحث في السجل…" class="mini-input" />
+          <button class="ghost-btn ghost-danger" id="clearHistoryBtn">مسح الكل</button>
+          <button class="icon-btn" id="closeHistory">✕</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="history-list" id="historyList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Playlist Manager modal -->
+  <div class="modal-overlay" id="playlistOverlay" hidden>
+    <div class="modal modal-wide playlist-modal">
+      <div class="modal-head">
+        <h3>مدير قوائم التشغيل</h3>
+        <button class="icon-btn" id="closePlaylist">✕</button>
+      </div>
+
+      <div class="modal-body playlist-modal-body">
+
+        <!-- Loading state -->
+        <div class="playlist-loading" id="playlistLoading">
+          <div class="playlist-loading-spinner"></div>
+          <div class="playlist-loading-text">جاري تحميل بيانات القائمة…</div>
+          <div class="playlist-loading-sub" id="playlistLoadingCount"></div>
+        </div>
+
+        <!-- Error state -->
+        <div class="playlist-error" id="playlistError" hidden>
+          <div class="preview-error-icon">⚠️</div>
+          <div class="preview-error-body">
+            <div class="preview-error-text" id="playlistErrorText">تعذر تحميل القائمة</div>
+            <div class="preview-error-sub">تأكد إن القائمة عامة والرابط صحيح</div>
+          </div>
+          <button type="button" class="preview-error-retry" id="playlistRetryBtn">إعادة المحاولة</button>
+        </div>
+
+        <!-- Loaded content -->
+        <div class="playlist-content" id="playlistContent" hidden>
+
+          <div class="playlist-summary">
+            <div class="playlist-summary-main">
+              <div class="playlist-summary-title" id="playlistSummaryTitle">—</div>
+              <div class="playlist-summary-sub" id="playlistSummarySub">—</div>
+            </div>
+            <div class="playlist-summary-stats">
+              <div class="playlist-stat">
+                <span class="playlist-stat-value" id="playlistStatSelected">0</span>
+                <span class="playlist-stat-label">مختار</span>
+              </div>
+              <div class="playlist-stat">
+                <span class="playlist-stat-value" id="playlistStatCount">0</span>
+                <span class="playlist-stat-label">فيديو</span>
+              </div>
+              <div class="playlist-stat">
+                <span class="playlist-stat-value" id="playlistStatDuration">—</span>
+                <span class="playlist-stat-label">مدة كلية</span>
+              </div>
+              <div class="playlist-stat">
+                <span class="playlist-stat-value" id="playlistStatSize">—</span>
+                <span class="playlist-stat-label">حجم تقريبي</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="playlist-toolbar">
+            <input type="text" id="playlistSearch" class="mini-input playlist-search" placeholder="بحث داخل القائمة…" />
+            <div class="playlist-toolbar-actions">
+              <button class="ghost-btn" id="playlistSelectAllBtn">تحديد الكل</button>
+              <button class="ghost-btn" id="playlistDeselectAllBtn">إلغاء التحديد</button>
+              <button class="ghost-btn" id="playlistInvertBtn">عكس التحديد</button>
+            </div>
+          </div>
+
+          <div class="playlist-range-row">
+            <span class="playlist-range-label">تحميل نطاق:</span>
+            <input type="number" id="playlistRangeFrom" class="mini-input playlist-range-input" min="1" placeholder="من" />
+            <span class="playlist-range-dash">—</span>
+            <input type="number" id="playlistRangeTo" class="mini-input playlist-range-input" min="1" placeholder="إلى" />
+            <button class="ghost-btn" id="playlistApplyRangeBtn">تطبيق</button>
+          </div>
+
+          <div class="playlist-items" id="playlistItems"></div>
+        </div>
+      </div>
+
+      <div class="playlist-modal-footer" id="playlistFooter" hidden>
+        <span class="playlist-footer-info" id="playlistFooterInfo">0 فيديو مختار</span>
+        <div class="playlist-footer-actions">
+          <button class="ghost-btn" id="playlistCancelBtn">إلغاء</button>
+          <button class="primary-btn" id="playlistConfirmBtn"><span>إضافة إلى قائمة التحميل</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Welcome modal (shown once) -->
+  <div class="modal-overlay" id="welcomeOverlay" hidden>
+    <div class="modal welcome-modal">
+      <div class="welcome-logo">F</div>
+      <div class="welcome-title">أهلاً، <span class="w-accent" id="welcomeName">فلوحو</span> 👋</div>
+      <div class="welcome-message" id="welcomeMessage">
+        مبسوطين إنك بتستخدم Fel7o Downloader — حمّل فيديوهات وأغاني يوتيوب بسهولة وبجودة عالية.
+      </div>
+      <div class="welcome-links" id="welcomeLinks"></div>
+      <div class="welcome-actions">
+        <button class="primary-btn" id="welcomeOkBtn">
+          <span>تمام</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
