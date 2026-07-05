@@ -320,9 +320,15 @@ ipcMain.handle('ytdlp:getPlaylistInfo', (_e, url) => new Promise((resolve) => {
   findWorkingBinary(ytdlpBinaryCandidates(), (bin) => {
     if (!bin) return resolve({ error: 'yt-dlp غير موجود' });
     execFile(bin, ['--flat-playlist', '--dump-single-json', '--no-warnings', '--ignore-errors', url],
-      { maxBuffer: 1024 * 1024 * 40 },
-      (err, stdout) => {
-        if (!stdout) return resolve({ error: 'تعذر جلب بيانات القائمة — تأكد إنها متاحة للعامة' });
+      { maxBuffer: 1024 * 1024 * 40, timeout: 60000 },
+      (err, stdout, stderr) => {
+        if (!stdout) {
+          if (err && err.killed) {
+            return resolve({ error: 'استغرق تحميل القائمة وقت طويل جدًا (قد تكون قائمة Mix/Radio تلقائية غير مدعومة) — جرّب رابط قائمة تشغيل عادية' });
+          }
+          const errLine = (stderr || '').split('\n').find((l) => l.trim().startsWith('ERROR:'));
+          return resolve({ error: errLine ? errLine.replace(/^ERROR:\s*/, '').trim() : 'تعذر جلب بيانات القائمة — تأكد إنها متاحة للعامة' });
+        }
         try {
           const data = JSON.parse(stdout);
           const rawEntries = Array.isArray(data.entries) ? data.entries : [];
