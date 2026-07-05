@@ -43,6 +43,36 @@
   --ease: cubic-bezier(.4, 0, .2, 1);
 }
 
+/* ---------- Light theme override ----------
+   Toggled by adding class="light-theme" to <body> (see renderer.js).
+   Accent/status colors are kept identical to preserve brand identity —
+   only the neutral surface/text scale flips for light backgrounds. */
+body.light-theme {
+  --bg: #F3F5F9;
+  --card: #FFFFFF;
+  --card-2: #EEF1F6;
+  --input: #FFFFFF;
+  --border: #E1E5EC;
+  --border-strong: #C9D0DC;
+
+  --text: #10151F;
+  --muted: #5B6577;
+  --dim: #8891A0;
+
+  --shadow-card: 0 10px 30px rgba(16, 21, 31, 0.08);
+  --shadow-soft: 0 4px 14px rgba(16, 21, 31, 0.06);
+}
+
+/* Light theme needs its own (subtler) background glow — the dark version's
+   opacities were tuned against a near-black background and look muddy on
+   white. */
+body.light-theme .bg-glow {
+  background:
+    radial-gradient(circle at 88% 8%, rgba(0, 212, 255, 0.10), transparent 42%),
+    radial-gradient(circle at 12% 96%, rgba(139, 92, 246, 0.12), transparent 45%),
+    var(--bg);
+}
+
 * { box-sizing: border-box; }
 
 html, body {
@@ -52,6 +82,7 @@ html, body {
   color: var(--text);
   font-family: "Segoe UI", "Cairo", system-ui, sans-serif;
   overflow: hidden;
+  transition: background .25s var(--ease), color .25s var(--ease);
 }
 
 /* ---------- Background glow ---------- */
@@ -64,6 +95,7 @@ html, body {
     radial-gradient(circle at 88% 8%, rgba(0, 212, 255, 0.16), transparent 42%),
     radial-gradient(circle at 12% 96%, rgba(139, 92, 246, 0.22), transparent 45%),
     var(--bg);
+  transition: background .25s var(--ease);
 }
 
 .app {
@@ -497,6 +529,11 @@ html, body {
   overflow: hidden;
 }
 
+body.light-theme .queue-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(238, 241, 246, 0.7));
+  box-shadow: 0 8px 24px rgba(16, 21, 31, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
 .queue-card::before {
   content: '';
   position: absolute;
@@ -638,9 +675,17 @@ html, body {
   transition: all .18s var(--ease);
 }
 
+body.light-theme .queue-stat {
+  background: rgba(16, 21, 31, 0.03);
+}
+
 .queue-card:hover .queue-stat {
   border-color: rgba(0, 212, 255, 0.2);
   background: rgba(14, 19, 28, 0.8);
+}
+
+body.light-theme .queue-card:hover .queue-stat {
+  background: rgba(16, 21, 31, 0.06);
 }
 
 .queue-stat-label {
@@ -746,6 +791,10 @@ html, body {
   position: relative;
 }
 
+body.light-theme .queue-action-btn {
+  background: rgba(16, 21, 31, 0.04);
+}
+
 .queue-action-btn::before {
   content: '';
   position: absolute;
@@ -832,6 +881,9 @@ html, body {
   backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center;
   animation: fadeIn .15s var(--ease);
+}
+body.light-theme .modal-overlay {
+  background: rgba(16, 21, 31, 0.35);
 }
 /* Author rules always beat the UA [hidden] rule regardless of specificity,
    so without this the `hidden` attribute never actually hides the overlay
