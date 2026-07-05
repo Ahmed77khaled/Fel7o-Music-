@@ -151,6 +151,12 @@ ipcMain.handle('dialog:chooseFolder', async () => {
 ipcMain.handle('shell:openFolder', (_e, folderPath) => {
   if (folderPath && fs.existsSync(folderPath)) shell.openPath(folderPath);
 });
+ipcMain.handle('shell:openJobFolder', (_e, { downloadFolder, playlistFolder }) => {
+  const folderName = sanitizeFolderName(playlistFolder);
+  const targetDir = folderName ? path.join(downloadFolder, folderName) : downloadFolder;
+  const finalDir = fs.existsSync(targetDir) ? targetDir : downloadFolder;
+  if (fs.existsSync(finalDir)) shell.openPath(finalDir);
+});
 ipcMain.handle('clipboard:read', () => require('electron').clipboard.readText());
 ipcMain.handle('shell:openExternal', (_e, url) => shell.openExternal(url));
 
@@ -162,9 +168,22 @@ ipcMain.handle('tools:checkYtdlp', () => new Promise((resolve) => {
   findWorkingBinary(ytdlpBinaryCandidates(), (bin) => resolve(!!bin));
 }));
 
+function sanitizeFolderName(name) {
+  if (!name) return null;
+  // Remove characters that are invalid in Windows folder names, trim trailing dots/spaces.
+  const cleaned = name.replace(/[\\/:*?"<>|]/g, ' ').replace(/\s+/g, ' ').trim().replace(/[. ]+$/, '');
+  return cleaned || null;
+}
+
 // ── Download engine ─────────────────────────────────────────────────
 async function buildArgs(job, settings) {
-  const outTemplate = path.join(settings.downloadFolder, '%(title)s.%(ext)s');
+  const playlistFolder = sanitizeFolderName(job.playlistFolder);
+  const targetDir = playlistFolder
+    ? path.join(settings.downloadFolder, playlistFolder)
+    : settings.downloadFolder;
+  if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+
+  const outTemplate = path.join(targetDir, '%(title)s.%(ext)s');
   const args = ['--newline', '--no-mtime', '-o', outTemplate];
 
   // Try to find ffmpeg to ensure post-processing works
