@@ -462,6 +462,18 @@ async function addToQueue() {
     showToast('رابط يوتيوب غير صالح');
     return;
   }
+
+  // Playlist links must go through the Playlist Manager so each video gets
+  // tagged with its playlist name (and downloads into its own subfolder).
+  // Without this, yt-dlp would silently download the whole playlist as a
+  // single "job" straight into the main download folder with no grouping.
+  if (/[?&]list=/.test(url)) {
+    el('urlInput').value = '';
+    clearUrlPreview();
+    openPlaylistManager(url);
+    return;
+  }
+
   await saveSettingsFromUI();
 
   const chosenMode = state.selectedMode;
@@ -608,6 +620,31 @@ function advanceActiveJobIfNeeded(finishedId) {
   }) || null;
 }
 
+// ── Render throttling ────────────────────────────────────────────────
+// yt-dlp can emit progress lines several times a second per download.
+// Re-building the whole queue/hero HTML on every single line causes visible
+// jank, especially with more than one concurrent download. We coalesce
+// bursts of progress updates into a single render per animation frame.
+let queueRenderScheduled = false;
+function scheduleRenderQueue() {
+  if (queueRenderScheduled) return;
+  queueRenderScheduled = true;
+  requestAnimationFrame(() => {
+    queueRenderScheduled = false;
+    renderQueue();
+  });
+}
+
+let heroRenderScheduled = false;
+function scheduleRenderHero() {
+  if (heroRenderScheduled) return;
+  heroRenderScheduled = true;
+  requestAnimationFrame(() => {
+    heroRenderScheduled = false;
+    renderHero();
+  });
+}
+
 // ── IPC wiring ──────────────────────────────────────────────────────
 function wireIpc() {
   window.fel7o.onProgress((data) => {
@@ -617,8 +654,8 @@ function wireIpc() {
     if (data.speed) job.speed = data.speed;
     if (data.eta) job.eta = data.eta;
     if (data.totalSize) job.totalSize = data.totalSize;
-    renderQueue();
-    renderHero();
+    scheduleRenderQueue();
+    scheduleRenderHero();
   });
 
   window.fel7o.onDone(async (data) => {
