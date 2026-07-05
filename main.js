@@ -184,7 +184,7 @@ async function buildArgs(job, settings) {
   if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
 
   const outTemplate = path.join(targetDir, '%(title)s.%(ext)s');
-  const args = ['--newline', '--no-mtime', '-o', outTemplate];
+  const args = ['--newline', '--no-mtime', '--no-playlist', '-o', outTemplate];
 
   // Try to find ffmpeg to ensure post-processing works
   const ffmpegPath = await new Promise(resolve => {
