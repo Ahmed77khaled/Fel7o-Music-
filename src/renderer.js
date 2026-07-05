@@ -1,10 +1,10 @@
 // ── Welcome popup config ──────────────────────────────────────────
 // Edit these values to customize the one-time welcome popup.
 const WELCOME_CONFIG = {
-  name: 'فلوحو',                                   // shown as "أهلاً، <name>"
+  name: 'Fel7o',                                   // shown as "أهلاً، <name>"
   message: 'مبسوطين إنك بتستخدم Fel7o Downloader — حمّل فيديوهات وأغاني يوتيوب بسهولة وبجودة عالية.',
   links: [
-    { text: 'فيسبوك', url: 'https://www.facebook.com/share/1GJ7rWrm1V/' },
+    { text: 'فيسبوك', url: 'https://web.facebook.com/ahmed.elfalah.754' },
     { text: 'لينكدإن', url: 'https://www.linkedin.com/in/ahmed-el-falah-b771bb345?utm_source=share_via&utm_content=profile&utm_medium=member_android' },
   ],
 };
@@ -557,6 +557,14 @@ function removeFromQueueUI(id) {
   renderHero();
 }
 
+function advanceActiveJobIfNeeded(finishedId) {
+  if (state.activeJobId !== finishedId) return;
+  state.activeJobId = state.jobOrder.find((oid) => {
+    const j = state.jobs.get(oid);
+    return j && (j.status === 'downloading' || j.status === 'queued');
+  }) || null;
+}
+
 // ── IPC wiring ──────────────────────────────────────────────────────
 function wireIpc() {
   window.fel7o.onProgress((data) => {
@@ -575,7 +583,8 @@ function wireIpc() {
     if (!job) return;
     job.status = 'completed';
     job.percent = 100;
-    
+    advanceActiveJobIfNeeded(data.id);
+
     window.fel7o.notify({
       title: 'اكتمل التحميل ✅',
       body: `تم تحميل "${job.title}" بنجاح.`
@@ -596,7 +605,8 @@ function wireIpc() {
     if (!job) return;
     job.status = 'error';
     job.errorMessage = data.message;
-    
+    advanceActiveJobIfNeeded(data.id);
+
     window.fel7o.notify({
       title: 'فشل التحميل ⚠️',
       body: `حدث خطأ أثناء تحميل "${job.title}".`
@@ -613,6 +623,7 @@ function wireIpc() {
     const job = state.jobs.get(data.id);
     if (!job) return;
     job.status = 'cancelled';
+    advanceActiveJobIfNeeded(data.id);
     renderQueue();
     renderHero();
     maybeStartNext();
@@ -686,8 +697,6 @@ function updateQueueStats() {
       stats.waiting++;
     } else if (job.status === 'completed') {
       stats.completed++;
-      totalPercent += 100;
-      downloadingCount++;
     } else if (job.status === 'error' || job.status === 'cancelled') {
       stats.failed++;
     }
