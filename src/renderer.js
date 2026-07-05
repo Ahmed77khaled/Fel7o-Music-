@@ -764,7 +764,7 @@ function updateQueueStats() {
   };
 
   let totalPercent = 0;
-  let downloadingCount = 0;
+  let countedJobs = 0;
 
   state.jobOrder.forEach((id) => {
     const job = state.jobs.get(id);
@@ -772,13 +772,18 @@ function updateQueueStats() {
     if (job.status === 'downloading') {
       stats.downloading++;
       totalPercent += job.percent || 0;
-      downloadingCount++;
+      countedJobs++;
     } else if (job.status === 'queued') {
       stats.waiting++;
+      countedJobs++; // 0% — counted so it drags the overall average down until it starts
     } else if (job.status === 'completed') {
       stats.completed++;
+      totalPercent += 100;
+      countedJobs++;
     } else if (job.status === 'error' || job.status === 'cancelled') {
       stats.failed++;
+      // Not counted: a failed/cancelled job shouldn't silently inflate or
+      // deflate the "overall progress" of what's actually being processed.
     }
   });
 
@@ -790,7 +795,7 @@ function updateQueueStats() {
     el('queueStatWaiting').textContent = stats.waiting;
     el('queueStatCompleted').textContent = stats.completed;
     el('queueStatFailed').textContent = stats.failed;
-    const avgPercent = downloadingCount > 0 ? Math.round(totalPercent / downloadingCount) : 0;
+    const avgPercent = countedJobs > 0 ? Math.round(totalPercent / countedJobs) : 0;
     el('queueStatProgress').textContent = `${avgPercent}%`;
     el('queueStatProgressBar').style.width = `${avgPercent}%`;
     // For total speed, sum all downloading jobs' speeds
@@ -1121,13 +1126,15 @@ function renderPlaylistContent() {
   el('playlistStatCount').textContent = data.videos.length;
   el('playlistStatSelected').textContent = state.playlist.selected.size;
 
+  const selectedVideos = data.videos.filter((v) => state.playlist.selected.has(v.id));
+
   let totalDuration = 0;
-  data.videos.forEach((v) => { totalDuration += v.durationSecs || 0; });
+  selectedVideos.forEach((v) => { totalDuration += v.durationSecs || 0; });
   const hours = Math.floor(totalDuration / 3600);
   const mins = Math.floor((totalDuration % 3600) / 60);
   el('playlistStatDuration').textContent = `${hours}س ${mins}د`;
 
-  const totalBytes = data.videos.reduce((sum, v) => sum + estimateVideoBytes(v.durationSecs), 0);
+  const totalBytes = selectedVideos.reduce((sum, v) => sum + estimateVideoBytes(v.durationSecs), 0);
   el('playlistStatSize').textContent = formatApproxSize(totalBytes) || '—';
 
   const q = (el('playlistSearch').value || '').toLowerCase();
